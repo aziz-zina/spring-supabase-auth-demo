@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">Supabase token inspector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;800&display=swap">
+    <link rel="stylesheet" href="../static/css/app.css" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:fragment="masthead(signedIn)" class="masthead">
+    <a class="wordmark" href="/" th:href="@{/}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M15 5v14" stroke-dasharray="2 2"/></svg>
+        Supabase token inspector
+    </a>
+    <form th:if="${signedIn}" th:action="@{/logout}" method="post">
+        <button type="submit" class="link-button">Sign out</button>
+    </form>
+    <a th:unless="${signedIn}" class="link-button" href="https://github.com/aziz-zina/spring-supabase-auth-demo">Source on GitHub</a>
+</header>
+</body>
+</html>

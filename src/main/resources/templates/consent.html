@@ -1,54 +1,48 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
+<head th:replace="~{fragments :: head('Authorize application')}">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Authorize application</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;800&display=swap">
+    <link rel="stylesheet" href="../static/css/app.css">
 </head>
 <!-- Public values only: the project URL and the publishable key -->
-<body th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
-<main class="container narrow">
+<body class="consent-page" th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
+<main class="consent">
 
-    <header class="header">
-        <span class="eyebrow">Consent page · served by Spring, not by Supabase</span>
-        <h1 id="title">Authorize application</h1>
-    </header>
+    <p class="consent-host">Supabase sign-in, hosted by this Spring app</p>
+    <h1 id="title">Sign in to continue</h1>
 
-    <p id="status" class="card muted">Loading…</p>
+    <p id="status" class="muted" role="status">Loading…</p>
 
-    <!-- Step 1: sign in to Supabase -->
-    <section id="sign-in" class="card" hidden>
-        <h2>Sign in</h2>
+<!-- Step 1: sign in to Supabase -->
+    <section id="sign-in" class="sheet" hidden>
         <form id="password-form" class="form">
             <label>Email <input id="email" type="email" autocomplete="email" required></label>
             <label>Password <input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
-            <div class="actions">
-                <button type="submit" class="button">Sign in</button>
-                <button type="button" id="sign-up" class="button secondary">Create account</button>
-            </div>
+            <button type="submit" class="button wide">Sign in</button>
+            <p class="muted small">New here? <button type="button" id="sign-up" class="link-button">Create an account</button> with this email and password.</p>
         </form>
         <div class="divider"><span>or</span></div>
-        <div class="actions">
-            <button type="button" id="magic-link" class="button secondary">Email me a magic link</button>
-            <button type="button" id="github" class="button secondary">Continue with GitHub</button>
+        <div class="stack">
+            <button type="button" id="magic-link" class="button quiet wide">Email me a sign-in link</button>
+            <button type="button" id="github" class="button quiet wide">Continue with GitHub</button>
         </div>
-        <p id="sign-in-error" class="error" hidden></p>
+        <p id="sign-in-error" class="form-message" role="alert" hidden></p>
     </section>
 
     <!-- Step 2: approve or deny -->
-    <section id="consent" class="card" hidden>
-        <p><strong id="client-name">An application</strong> wants to access your account.</p>
-        <dl class="details">
-            <dt>Signed in as</dt><dd id="user-email"></dd>
-            <dt>Permissions</dt><dd><ul id="scopes"></ul></dd>
-            <dt>Redirect URI</dt><dd><code id="redirect-uri"></code></dd>
-        </dl>
-        <div class="actions">
-            <button type="button" id="approve" class="button">Approve</button>
-            <button type="button" id="deny" class="button secondary">Deny</button>
+    <section id="consent" class="sheet" hidden>
+        <p class="consent-who">Signed in as <strong id="user-email"></strong>.
+            <button type="button" id="switch-account" class="link-button">Use another account</button></p>
+        <h2 class="consent-ask"><span id="client-name">An application</span> will be able to:</h2>
+        <ul id="scopes" class="permissions"></ul>
+        <div class="decide">
+            <button type="button" id="approve" class="button wide">Allow</button>
+            <button type="button" id="deny" class="button quiet wide">Cancel</button>
         </div>
-        <p class="muted small">Not you? <a href="#" id="switch-account">Use another account</a></p>
+        <p class="muted small">After you allow, you'll go back to <code id="redirect-uri"></code></p>
     </section>
 
 </main>
@@ -64,6 +58,14 @@
 
     const $ = (id) => document.getElementById(id);
     const show = (id) => { for (const s of ['status', 'sign-in', 'consent']) $(s).hidden = s !== id; };
+    // what each scope lets the app do, in plain words
+    const PERMISSIONS = {
+        openid: 'Confirm who you are',
+        email: 'See your email address',
+        profile: 'See your name and profile picture',
+        phone: 'See your phone number',
+        offline_access: 'Stay signed in when you\'re away',
+    };
     const status = (text) => { $('status').textContent = text; show('status'); };
     const signInError = (text) => { $('sign-in-error').textContent = text; $('sign-in-error').hidden = !text; };
 
@@ -93,13 +95,14 @@
             location.href = data.redirect_url;
             return;
         }
-        $('title').textContent = 'Authorize ' + (data.client?.name ?? 'application');
+        $('title').textContent = 'Allow ' + (data.client?.name ?? 'this application') + '?';
         $('client-name').textContent = data.client?.name ?? 'An application';
         $('user-email').textContent = user.email ?? user.id;
         $('redirect-uri').textContent = data.redirect_uri ?? '';
         $('scopes').replaceChildren(...(data.scope ?? '').trim().split(/\s+/).filter(Boolean).map((scope) => {
             const li = document.createElement('li');
-            li.textContent = scope;
+            li.textContent = PERMISSIONS[scope] ?? scope;
+            li.title = scope;
             return li;
         }));
         show('consent');
@@ -145,7 +148,7 @@
         const { error } = await supabase.auth.signInWithOtp({
             email: $('email').value, options: { emailRedirectTo: returnTo },
         });
-        signInError(error ? error.message : 'Magic link sent. Open it in this browser.');
+        signInError(error ? error.message : 'Sign-in link sent. Open it in this browser.');
     });
 
     $('github').addEventListener('click', async () => {
@@ -158,9 +161,9 @@
 
     $('approve').addEventListener('click', () => decide(true));
     $('deny').addEventListener('click', () => decide(false));
-    $('switch-account').addEventListener('click', async (event) => {
-        event.preventDefault();
+    $('switch-account').addEventListener('click', async () => {
         await supabase.auth.signOut();
+        $('title').textContent = 'Sign in to continue';
         show('sign-in');
     });
 

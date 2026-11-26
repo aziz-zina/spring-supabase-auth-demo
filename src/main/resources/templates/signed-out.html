@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
+<head th:replace="~{fragments :: head('Signed out')}">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Signed out</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" href="../static/css/app.css">
 </head>
 <body th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
-<main class="container narrow">
-    <header class="header">
-        <h1>Signed out</h1>
-    </header>
-    <section class="card">
-        <p id="status" class="muted">Ending the Supabase session…</p>
-        <a class="button" th:href="@{/}">Back to the app</a>
+<header th:replace="~{fragments :: masthead(false)}" class="masthead">
+    <a class="wordmark" href="/">Supabase token inspector</a>
+</header>
+<main class="page">
+    <section class="intro">
+        <h1>You're signed out.</h1>
+        <p class="lede" id="status" role="status">Ending your Supabase session too…</p>
+        <a class="button" href="/" th:href="@{/}">Sign in again</a>
     </section>
 </main>
 <script type="module">
@@ -23,8 +23,9 @@
 
     const { supabaseUrl, supabaseKey } = document.body.dataset;
     const { error } = await createClient(supabaseUrl, supabaseKey).auth.signOut();
-    document.getElementById('status').textContent =
-        error ? 'Signed out of the app, but not of Supabase: ' + error.message : 'Signed out of the app and of Supabase.';
+    document.getElementById('status').textContent = error
+        ? 'You left this app, but your Supabase session is still open: ' + error.message
+        : 'You left this app and your Supabase session is closed. The next sign-in will ask for your password.';
 </script>
 </body>
 </html>
