@@ -29,6 +29,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 body {
     margin: 0;
     background: var(--bg);
@@ -384,7 +386,8 @@ code, pre, .mono { font-family: var(--mono); font-size: 12.5px; }
 /* ---------- Small screens ---------- */
 
 @media (max-width: 760px) {
-    .top-user { display: none; }
+    .top-user, .crumb, .crumb-sep { display: none; }
+    .top-brand b { white-space: nowrap; }
     .shell { grid-template-columns: 1fr; }
     .side {
         display: flex;
@@ -397,7 +400,7 @@ code, pre, .mono { font-family: var(--mono); font-size: 12.5px; }
     .side-label { display: none; }
     .side a { flex: none; gap: 8px; }
     .main { padding: 20px 16px 40px; }
-    .table td.d { display: none; }
+    .table .d { display: none; }
     .table td.k { width: 110px; }
     .req { flex-wrap: wrap; }
     .req-auth { display: none; }

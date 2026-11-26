@@ -24,8 +24,5 @@ jobs:
             target/preview/
             src/main/resources/static/
           if-no-files-found: ignore
-      # TEMPORARY: print previews to the log for design review
-      - if: always()
-        run: for f in target/preview/*.html; do echo "=====PREVIEW $(basename $f)"; base64 -w0 "$f"; echo; done
       # same image Render builds
       - run: docker build -t spring-supabase-auth-demo .
