@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Authorize application</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<!-- Public values only: the project URL and the publishable key -->
+<body th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
+<main class="container narrow">
+
+    <header class="header">
+        <span class="eyebrow">Consent page · served by Spring, not by Supabase</span>
+        <h1 id="title">Authorize application</h1>
+    </header>
+
+    <p id="status" class="card muted">Loading…</p>
+
+    <!-- Step 1: sign in to Supabase -->
+    <section id="sign-in" class="card" hidden>
+        <h2>Sign in</h2>
+        <form id="password-form" class="form">
+            <label>Email <input id="email" type="email" autocomplete="email" required></label>
+            <label>Password <input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
+            <div class="actions">
+                <button type="submit" class="button">Sign in</button>
+                <button type="button" id="sign-up" class="button secondary">Create account</button>
+            </div>
+        </form>
+        <div class="divider"><span>or</span></div>
+        <div class="actions">
+            <button type="button" id="magic-link" class="button secondary">Email me a magic link</button>
+            <button type="button" id="github" class="button secondary">Continue with GitHub</button>
+        </div>
+        <p id="sign-in-error" class="error" hidden></p>
+    </section>
+
+    <!-- Step 2: approve or deny -->
+    <section id="consent" class="card" hidden>
+        <p><strong id="client-name">An application</strong> wants to access your account.</p>
+        <dl class="details">
+            <dt>Signed in as</dt><dd id="user-email"></dd>
+            <dt>Permissions</dt><dd><ul id="scopes"></ul></dd>
+            <dt>Redirect URI</dt><dd><code id="redirect-uri"></code></dd>
+        </dl>
+        <div class="actions">
+            <button type="button" id="approve" class="button">Approve</button>
+            <button type="button" id="deny" class="button secondary">Deny</button>
+        </div>
+        <p class="muted small">Not you? <a href="#" id="switch-account">Use another account</a></p>
+    </section>
+
+</main>
+
+<script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const { supabaseUrl, supabaseKey } = document.body.dataset;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const authorizationId = new URLSearchParams(location.search).get('authorization_id');
+    // social / magic-link sign-ins come back to this exact URL, authorization_id included
+    const returnTo = location.origin + location.pathname + location.search;
+
+    const $ = (id) => document.getElementById(id);
+    const show = (id) => { for (const s of ['status', 'sign-in', 'consent']) $(s).hidden = s !== id; };
+    const status = (text) => { $('status').textContent = text; show('status'); };
+    const signInError = (text) => { $('sign-in-error').textContent = text; $('sign-in-error').hidden = !text; };
+
+    async function start() {
+        if (!authorizationId) {
+            status('Missing authorization_id. Start from the app\'s "Sign in with Supabase" button.');
+            return;
+        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            show('sign-in');
+            return;
+        }
+        await loadConsent(user);
+    }
+
+    async function loadConsent(user) {
+        status('Loading the authorization request…');
+        const { data, error } = await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
+        if (error) {
+            status('Could not load the request: ' + error.message);
+            return;
+        }
+        // no authorization_id in the response: the user already consented, Supabase gives the redirect directly
+        if (!('authorization_id' in data) && data.redirect_url) {
+            status('Already approved, redirecting…');
+            location.href = data.redirect_url;
+            return;
+        }
+        $('title').textContent = 'Authorize ' + (data.client?.name ?? 'application');
+        $('client-name').textContent = data.client?.name ?? 'An application';
+        $('user-email').textContent = user.email ?? user.id;
+        $('redirect-uri').textContent = data.redirect_uri ?? '';
+        $('scopes').replaceChildren(...(data.scope ?? '').trim().split(/\s+/).filter(Boolean).map((scope) => {
+            const li = document.createElement('li');
+            li.textContent = scope;
+            return li;
+        }));
+        show('consent');
+    }
+
+    async function decide(approve) {
+        status(approve ? 'Approving…' : 'Denying…');
+        const { data, error } = approve
+            ? await supabase.auth.oauth.approveAuthorization(authorizationId)
+            : await supabase.auth.oauth.denyAuthorization(authorizationId);
+        if (error) {
+            status('Error: ' + error.message);
+            return;
+        }
+        location.href = data.redirect_url;
+    }
+
+    $('password-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        signInError('');
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: $('email').value, password: $('password').value,
+        });
+        if (error) return signInError(error.message);
+        await loadConsent(data.user);
+    });
+
+    $('sign-up').addEventListener('click', async () => {
+        signInError('');
+        if (!$('password-form').reportValidity()) return;
+        const { data, error } = await supabase.auth.signUp({
+            email: $('email').value, password: $('password').value,
+            options: { emailRedirectTo: returnTo },
+        });
+        if (error) return signInError(error.message);
+        if (!data.session) return signInError('Check your inbox to confirm your email, then come back with the link.');
+        await loadConsent(data.user);
+    });
+
+    $('magic-link').addEventListener('click', async () => {
+        signInError('');
+        if (!$('email').reportValidity()) return;
+        const { error } = await supabase.auth.signInWithOtp({
+            email: $('email').value, options: { emailRedirectTo: returnTo },
+        });
+        signInError(error ? error.message : 'Magic link sent. Open it in this browser.');
+    });
+
+    $('github').addEventListener('click', async () => {
+        signInError('');
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'github', options: { redirectTo: returnTo },
+        });
+        if (error) signInError(error.message);
+    });
+
+    $('approve').addEventListener('click', () => decide(true));
+    $('deny').addEventListener('click', () => decide(false));
+    $('switch-account').addEventListener('click', async (event) => {
+        event.preventDefault();
+        await supabase.auth.signOut();
+        show('sign-in');
+    });
+
+    start().catch((e) => status('Unexpected error: ' + e.message));
+</script>
+</body>
+</html>

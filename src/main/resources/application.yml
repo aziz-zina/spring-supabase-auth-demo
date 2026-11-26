@@ -1,0 +1,39 @@
+# Values come from environment variables or from a local .env file (see .env.example).
+spring:
+  application:
+    name: spring-supabase-auth-demo
+  config:
+    import: optional:file:.env[.properties]
+
+  security:
+    oauth2:
+      # The Spring app is an OAuth client registered in Supabase (Authentication > OAuth Apps)
+      client:
+        registration:
+          supabase:
+            client-name: Supabase
+            client-id: ${SUPABASE_OAUTH_CLIENT_ID}
+            client-secret: ${SUPABASE_OAUTH_CLIENT_SECRET}
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid,email,profile
+        provider:
+          supabase:
+            # Spring reads ${SUPABASE_URL}/auth/v1/.well-known/openid-configuration at startup
+            issuer-uri: ${SUPABASE_URL}/auth/v1
+
+      # /api/** validates Supabase access tokens with the project's JWKS
+      resourceserver:
+        jwt:
+          issuer-uri: ${SUPABASE_URL}/auth/v1
+
+# Used by the consent page (supabase-js runs in the browser).
+# The publishable key is public by design: Row Level Security protects the data, not this key.
+supabase:
+  url: ${SUPABASE_URL}
+  publishable-key: ${SUPABASE_PUBLISHABLE_KEY}
+
+logging:
+  level:
+    org.springframework.security: INFO

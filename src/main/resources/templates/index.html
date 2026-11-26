@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spring Boot + Supabase Auth</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container">
+
+    <header class="header">
+        <span class="eyebrow">Spring Boot · Supabase Auth · OAuth 2.1</span>
+        <h1>Sign in with Supabase</h1>
+    </header>
+
+    <!-- Signed out -->
+    <section th:if="${email == null and idTokenClaims == null}" class="card">
+        <p>
+            This Spring Boot app is an OAuth client of your Supabase project.
+            Clicking the button starts the authorization code flow with PKCE:
+        </p>
+        <ol class="steps">
+            <li>Spring redirects you to Supabase's <code>/auth/v1/oauth/authorize</code>.</li>
+            <li>Supabase redirects you to the <strong>consent page</strong> (<code>/oauth/consent</code>), served by this app, not by Supabase.</li>
+            <li>You sign in and approve. Supabase sends a code back to Spring, which exchanges it for tokens.</li>
+        </ol>
+        <a class="button" th:href="@{/oauth2/authorization/supabase}">Sign in with Supabase</a>
+    </section>
+
+    <!-- Signed in -->
+    <th:block th:unless="${email == null and idTokenClaims == null}">
+        <section class="card row">
+            <div>
+                <span class="muted">Signed in as</span>
+                <strong th:text="${email ?: 'unknown email'}">user@example.com</strong>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="button secondary">Sign out</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Access token</h2>
+            <p class="muted">
+                What Spring sends to APIs. Validated here with Supabase's JWKS, exactly like <code>/api/me</code> does.
+                Scopes: <code th:text="${grantedScopes}">[openid, email]</code> ·
+                refresh token: <code th:text="${hasRefreshToken} ? 'yes' : 'no'">yes</code>
+            </p>
+            <table class="claims">
+                <tr th:each="claim : ${accessTokenClaims}">
+                    <th th:text="${claim.key}">claim</th>
+                    <td th:text="${claim.value}">value</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>ID token</h2>
+            <p class="muted">Who signed in, for this app only (OpenID Connect).</p>
+            <table class="claims">
+                <tr th:each="claim : ${idTokenClaims}">
+                    <th th:text="${claim.key}">claim</th>
+                    <td th:text="${claim.value}">value</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="card" th:if="${accessToken != null}">
+            <h2>Call the protected API</h2>
+            <p class="muted">Copy the command and run it in a terminal.</p>
+            <pre><code th:text="'curl -s http://localhost:8080/api/me -H &quot;Authorization: Bearer ' + ${accessToken} + '&quot;'">curl ...</code></pre>
+        </section>
+    </th:block>
+
+</main>
+</body>
+</html>

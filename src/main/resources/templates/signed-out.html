@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Signed out</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
+<main class="container narrow">
+    <header class="header">
+        <h1>Signed out</h1>
+    </header>
+    <section class="card">
+        <p id="status" class="muted">Ending the Supabase session…</p>
+        <a class="button" th:href="@{/}">Back to the app</a>
+    </section>
+</main>
+<script type="module">
+    // Spring's session is gone; this also clears the Supabase session kept by supabase-js in this browser,
+    // so the next sign-in asks for credentials again (handy to test another user).
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const { supabaseUrl, supabaseKey } = document.body.dataset;
+    const { error } = await createClient(supabaseUrl, supabaseKey).auth.signOut();
+    document.getElementById('status').textContent =
+        error ? 'Signed out of the app, but not of Supabase: ' + error.message : 'Signed out of the app and of Supabase.';
+</script>
+</body>
+</html>
