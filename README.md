@@ -2,7 +2,7 @@
 
 A Spring Boot 4 app that uses a Supabase project as its **OAuth 2.1 / OpenID Connect authorization server**, the same way you would use Keycloak:
 
-- `/`: "Sign in with Supabase" (authorization code + PKCE), then shows the ID token and access token claims.
+- `/`: "Continue with Supabase" (authorization code + PKCE), then a token inspector styled like the Supabase dashboard: access, ID and refresh tokens, the project's discovery document and public keys.
 - `/oauth/consent`: the login + consent page Supabase redirects to. **Served by this app**, because Supabase doesn't host one.
 - `/api/me`: a stateless API that accepts Supabase access tokens (`Authorization: Bearer ...`), validated with the project's JWKS.
 
@@ -48,11 +48,12 @@ The app reads `${SUPABASE_URL}/auth/v1/.well-known/openid-configuration` at star
 
 ## 3. Try it
 
-1. Click **Sign in with Supabase**.
+1. Click **Continue with Supabase**.
 2. On the consent page, create an account or sign in, then **Approve**.
-3. You're back on `/` with the claims of both tokens. Note `client_id` in the access token: it's how RLS policies or your API can tell OAuth clients apart.
-4. Copy the `curl` command at the bottom to call `/api/me` with the access token.
-5. **Sign out** ends both the Spring session and the Supabase browser session, so you can try another user.
+3. You land on the access token: expiry, client, scopes and every claim with what it means. Note `client_id`: it's how RLS policies or your API can tell OAuth clients apart.
+4. Click **Send request** in the console to call `/api/me` with the access token.
+5. Use the sidebar for the ID token, the refresh token, the discovery document and the public keys (JWKS).
+6. **Sign out** ends both the Spring session and the Supabase browser session, so you can try another user.
 
 ## 4. Deploy on Render (free)
 
@@ -82,7 +83,8 @@ Browser ──► Spring /oauth2/authorization/supabase
 | File | Role |
 | --- | --- |
 | `SecurityConfig.java` | Two filter chains: OAuth login (with PKCE) for pages, JWT resource server for `/api/**` |
-| `HomeController.java` | Shows the tokens; decodes the access token with the same `JwtDecoder` as the API |
+| `InspectorController.java` | The inspector pages; decodes the access token with the same `JwtDecoder` as the API |
+| `TemplateRenderingTest.java` | Renders every page with sample data (writes `target/preview/*.html`) |
 | `ConsentController.java` + `consent.html` | The consent page Supabase redirects to |
 | `ApiController.java` | `/api/me`, the protected API |
 | `application.yml` | Client registration and issuer (`${SUPABASE_URL}/auth/v1`) |
