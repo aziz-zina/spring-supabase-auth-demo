@@ -9,7 +9,11 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.oidc.authentication.OidcIdTokenDecoderFactory;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.web.SecurityFilterChain;
@@ -20,6 +24,17 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    /**
+     * Spring checks ID tokens with RS256 by default. Supabase signs with the project's current JWT signing key,
+     * an ECC P-256 key (ES256) on new projects. Change this if you rotate to an RSA key.
+     */
+    @Bean
+    public JwtDecoderFactory<ClientRegistration> idTokenDecoderFactory() {
+        var factory = new OidcIdTokenDecoderFactory();
+        factory.setJwsAlgorithmResolver(clientRegistration -> SignatureAlgorithm.ES256);
+        return factory;
+    }
 
     /**
      * API: stateless, accepts "Authorization: Bearer <Supabase access token>".

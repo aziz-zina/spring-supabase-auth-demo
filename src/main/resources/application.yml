@@ -33,6 +33,8 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${SUPABASE_URL}/auth/v1
+          # Supabase's asymmetric signing keys: ES256 (ECC P-256, the default) or RS256 (RSA)
+          jws-algorithms: ES256,RS256
 
 # Used by the consent page (supabase-js runs in the browser).
 # The publishable key is public by design: Row Level Security protects the data, not this key.
