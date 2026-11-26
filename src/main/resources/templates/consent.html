@@ -1,48 +1,66 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('Authorize application')}">
+<head th:replace="~{fragments :: head('Authorize')}">
     <meta charset="UTF-8">
-    <title>Authorize application</title>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;800&display=swap">
+    <title>Authorize | Token inspector</title>
     <link rel="stylesheet" href="../static/css/app.css">
 </head>
 <!-- Public values only: the project URL and the publishable key -->
-<body class="consent-page" th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
-<main class="consent">
+<body th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
+<main class="auth">
 
-    <p class="consent-host">Supabase sign-in, hosted by this Spring app</p>
-    <h1 id="title">Sign in to continue</h1>
+    <p id="status" class="card-status" role="status">Loading…</p>
 
-    <p id="status" class="muted" role="status">Loading…</p>
+    <!-- Step 1: sign in to Supabase -->
+    <section id="sign-in" class="card" hidden>
+        <h1>Sign in</h1>
+        <p>to continue to <b class="app-name" data-app-name>the application</b></p>
 
-<!-- Step 1: sign in to Supabase -->
-    <section id="sign-in" class="sheet" hidden>
+        <button type="button" id="github" class="btn lg block gap-top">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.67.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            Continue with GitHub
+        </button>
+
+        <div class="or">or</div>
+
         <form id="password-form" class="form">
-            <label>Email <input id="email" type="email" autocomplete="email" required></label>
-            <label>Password <input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
-            <button type="submit" class="button wide">Sign in</button>
-            <p class="muted small">New here? <button type="button" id="sign-up" class="link-button">Create an account</button> with this email and password.</p>
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+                <div class="field-row">
+                    <label for="password">Password</label>
+                    <button type="button" id="magic-link" class="text-link">Email me a link instead</button>
+                </div>
+                <input id="password" type="password" autocomplete="current-password" minlength="6" required>
+            </div>
+            <button type="submit" class="btn primary lg block">Sign in</button>
         </form>
-        <div class="divider"><span>or</span></div>
-        <div class="stack">
-            <button type="button" id="magic-link" class="button quiet wide">Email me a sign-in link</button>
-            <button type="button" id="github" class="button quiet wide">Continue with GitHub</button>
-        </div>
-        <p id="sign-in-error" class="form-message" role="alert" hidden></p>
+
+        <p id="sign-in-message" class="form-message" role="alert" hidden></p>
+        <p class="card-foot">No account? <button type="button" id="sign-up" class="text-link">Sign up</button></p>
     </section>
 
-    <!-- Step 2: approve or deny -->
-    <section id="consent" class="sheet" hidden>
-        <p class="consent-who">Signed in as <strong id="user-email"></strong>.
-            <button type="button" id="switch-account" class="link-button">Use another account</button></p>
-        <h2 class="consent-ask"><span id="client-name">An application</span> will be able to:</h2>
-        <ul id="scopes" class="permissions"></ul>
-        <div class="decide">
-            <button type="button" id="approve" class="button wide">Allow</button>
-            <button type="button" id="deny" class="button quiet wide">Cancel</button>
+    <!-- Step 2: allow or cancel -->
+    <section id="consent" class="card" hidden>
+        <div class="app">
+            <span class="app-icon" id="app-initial" aria-hidden="true">A</span>
+            <div>
+                <b data-app-name>The application</b>
+                <span>wants access to your account</span>
+            </div>
         </div>
-        <p class="muted small">After you allow, you'll go back to <code id="redirect-uri"></code></p>
+        <div class="who">
+            <span>Signed in as <b id="user-email"></b></span>
+            <button type="button" id="switch-account" class="text-link">Switch</button>
+        </div>
+        <ul id="scopes" class="perm"></ul>
+        <div class="row2">
+            <button type="button" id="deny" class="btn lg block">Cancel</button>
+            <button type="button" id="approve" class="btn primary lg block">Allow</button>
+        </div>
+        <p class="card-foot small">You'll be sent to <span class="mono" id="redirect-host"></span></p>
     </section>
 
 </main>
@@ -53,25 +71,34 @@
     const { supabaseUrl, supabaseKey } = document.body.dataset;
     const supabase = createClient(supabaseUrl, supabaseKey);
     const authorizationId = new URLSearchParams(location.search).get('authorization_id');
-    // social / magic-link sign-ins come back to this exact URL, authorization_id included
+    // GitHub and email-link sign-ins come back to this exact URL, authorization_id included
     const returnTo = location.origin + location.pathname + location.search;
 
-    const $ = (id) => document.getElementById(id);
-    const show = (id) => { for (const s of ['status', 'sign-in', 'consent']) $(s).hidden = s !== id; };
     // what each scope lets the app do, in plain words
     const PERMISSIONS = {
         openid: 'Confirm who you are',
         email: 'See your email address',
         profile: 'See your name and profile picture',
         phone: 'See your phone number',
-        offline_access: 'Stay signed in when you\'re away',
+        offline_access: 'Stay signed in while you\'re away',
     };
+    const CHECK = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>';
+
+    const $ = (id) => document.getElementById(id);
+    const show = (id) => { for (const s of ['status', 'sign-in', 'consent']) $(s).hidden = s !== id; };
     const status = (text) => { $('status').textContent = text; show('status'); };
-    const signInError = (text) => { $('sign-in-error').textContent = text; $('sign-in-error').hidden = !text; };
+    const message = (text, isError = true) => {
+        const el = $('sign-in-message');
+        el.textContent = text;
+        el.hidden = !text;
+        el.classList.toggle('is-error', isError);
+    };
+
+    let details = null;
 
     async function start() {
         if (!authorizationId) {
-            status('Missing authorization_id. Start from the app\'s "Sign in with Supabase" button.');
+            status('This page opens during sign-in. Start from the app\'s "Continue with Supabase" button.');
             return;
         }
         const { data: { user } } = await supabase.auth.getUser();
@@ -83,34 +110,37 @@
     }
 
     async function loadConsent(user) {
-        status('Loading the authorization request…');
+        status('Loading the request…');
         const { data, error } = await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
         if (error) {
-            status('Could not load the request: ' + error.message);
+            status('Couldn\'t load the request: ' + error.message);
             return;
         }
-        // no authorization_id in the response: the user already consented, Supabase gives the redirect directly
+        // no authorization_id in the response: the user already allowed this app, Supabase gives the redirect directly
         if (!('authorization_id' in data) && data.redirect_url) {
-            status('Already approved, redirecting…');
+            status('Already allowed. Redirecting…');
             location.href = data.redirect_url;
             return;
         }
-        $('title').textContent = 'Allow ' + (data.client?.name ?? 'this application') + '?';
-        $('client-name').textContent = data.client?.name ?? 'An application';
+        details = data;
+        const name = data.client?.name ?? 'The application';
+        for (const el of document.querySelectorAll('[data-app-name]')) el.textContent = name;
+        $('app-initial').textContent = name.trim().charAt(0).toUpperCase();
         $('user-email').textContent = user.email ?? user.id;
-        $('redirect-uri').textContent = data.redirect_uri ?? '';
+        try { $('redirect-host').textContent = new URL(data.redirect_uri).host; } catch { $('redirect-host').textContent = data.redirect_uri ?? ''; }
         $('scopes').replaceChildren(...(data.scope ?? '').trim().split(/\s+/).filter(Boolean).map((scope) => {
             const li = document.createElement('li');
-            li.textContent = PERMISSIONS[scope] ?? scope;
+            li.innerHTML = CHECK;
+            li.append(PERMISSIONS[scope] ?? scope);
             li.title = scope;
             return li;
         }));
         show('consent');
     }
 
-    async function decide(approve) {
-        status(approve ? 'Approving…' : 'Denying…');
-        const { data, error } = approve
+    async function decide(allow) {
+        status(allow ? 'Allowing…' : 'Cancelling…');
+        const { data, error } = allow
             ? await supabase.auth.oauth.approveAuthorization(authorizationId)
             : await supabase.auth.oauth.denyAuthorization(authorizationId);
         if (error) {
@@ -122,48 +152,47 @@
 
     $('password-form').addEventListener('submit', async (event) => {
         event.preventDefault();
-        signInError('');
+        message('');
         const { data, error } = await supabase.auth.signInWithPassword({
             email: $('email').value, password: $('password').value,
         });
-        if (error) return signInError(error.message);
+        if (error) return message(error.message);
         await loadConsent(data.user);
     });
 
     $('sign-up').addEventListener('click', async () => {
-        signInError('');
+        message('');
         if (!$('password-form').reportValidity()) return;
         const { data, error } = await supabase.auth.signUp({
             email: $('email').value, password: $('password').value,
             options: { emailRedirectTo: returnTo },
         });
-        if (error) return signInError(error.message);
-        if (!data.session) return signInError('Check your inbox to confirm your email, then come back with the link.');
+        if (error) return message(error.message);
+        if (!data.session) return message('Check your inbox and open the confirmation link in this browser.', false);
         await loadConsent(data.user);
     });
 
     $('magic-link').addEventListener('click', async () => {
-        signInError('');
+        message('');
         if (!$('email').reportValidity()) return;
         const { error } = await supabase.auth.signInWithOtp({
             email: $('email').value, options: { emailRedirectTo: returnTo },
         });
-        signInError(error ? error.message : 'Sign-in link sent. Open it in this browser.');
+        message(error ? error.message : 'Sign-in link sent. Open it in this browser.', Boolean(error));
     });
 
     $('github').addEventListener('click', async () => {
-        signInError('');
+        message('');
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'github', options: { redirectTo: returnTo },
         });
-        if (error) signInError(error.message);
+        if (error) message(error.message);
     });
 
     $('approve').addEventListener('click', () => decide(true));
     $('deny').addEventListener('click', () => decide(false));
     $('switch-account').addEventListener('click', async () => {
         await supabase.auth.signOut();
-        $('title').textContent = 'Sign in to continue';
         show('sign-in');
     });
 

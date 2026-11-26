@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${title})}">
+    <meta charset="UTF-8">
+    <title>Access token | Token inspector</title>
+    <link rel="stylesheet" href="../static/css/app.css">
+    <script defer src="../static/js/app.js"></script>
+</head>
+<body>
+<header th:replace="~{fragments :: topbar}"></header>
+<div class="shell">
+    <nav th:replace="~{fragments :: sidebar(${active})}"></nav>
+
+    <main class="main">
+        <div class="head">
+            <h1 th:text="${title}">Access token</h1>
+            <span class="badge ok" data-validity th:if="${expiresAt != null}">Valid</span>
+        </div>
+        <p class="sub" th:text="${description}">
+            Spring sends this token to APIs in the Authorization header. Signature checked against your project's public keys.
+        </p>
+
+        <div class="alert" th:if="${tokenError != null}" role="alert">
+            <b>Spring couldn't validate this token.</b>
+            <span th:text="${tokenError}">error</span>
+        </div>
+
+        <!-- Summary bar -->
+        <div class="meta" th:if="${expiresAt != null}"
+             th:attr="data-issued=${issuedAt}, data-expires=${expiresAt}">
+            <div>
+                <span>Expires</span>
+                <b data-countdown th:text="${expiresAt}">in 54 min</b>
+                <div class="bar" aria-hidden="true"><i data-meter></i></div>
+            </div>
+            <div th:each="fact : ${facts}" th:if="${!#strings.isEmpty(fact.value)}">
+                <span th:text="${fact.label}">Issued</span>
+                <b th:if="${fact.time}"><time data-local-time th:datetime="${fact.value}" th:text="${fact.value}">26 Nov, 16:17</time></b>
+                <b th:unless="${fact.time}" th:classappend="${fact.mono} ? 'mono'" th:text="${fact.value}">ab5830a5…5e95e42a</b>
+            </div>
+        </div>
+
+        <!-- Claims / Encoded -->
+        <div class="tabs" role="tablist" aria-label="View">
+            <button type="button" role="tab" id="tab-claims" aria-controls="panel-claims" aria-selected="true">Claims</button>
+            <button type="button" role="tab" id="tab-encoded" aria-controls="panel-encoded" aria-selected="false" tabindex="-1">Encoded</button>
+        </div>
+
+        <div role="tabpanel" id="panel-claims" aria-labelledby="tab-claims">
+            <table class="table">
+                <thead>
+                <tr><th scope="col">Claim</th><th scope="col">Value</th><th scope="col">Meaning</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="claim : ${claims}">
+                    <td class="k" th:text="${claim.name}">sub</td>
+                    <td class="v">
+                        <time th:if="${claim.time}" data-local-time th:datetime="${claim.value}" th:text="${claim.value}"></time>
+                        <th:block th:unless="${claim.time}" th:text="${claim.value}">d799bc4b-8993-4d5a-8346-7a9d59707339</th:block>
+                    </td>
+                    <td class="d" th:text="${claim.meaning}">User ID in Supabase (auth.users.id)</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div role="tabpanel" id="panel-encoded" aria-labelledby="tab-encoded" hidden>
+            <div class="code-block">
+                <div class="code-head">
+                    <span><span class="jwt-header">Header</span>.<span class="jwt-payload">Payload</span>.<span class="jwt-signature">Signature</span></span>
+                    <button type="button" class="btn" data-copy="#encoded-token">Copy</button>
+                </div>
+                <pre class="code jwt" id="encoded-token" data-jwt th:text="${token}">eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJkNzk5In0.c2lnbmF0dXJl</pre>
+            </div>
+        </div>
+
+        <!-- Request console (access token only) -->
+        <section class="console" id="console" th:if="${console}" aria-label="Call the API">
+            <div class="req">
+                <span class="method">GET</span>
+                <span class="url">/api/me</span>
+                <span class="req-auth" th:text="'Authorization: Bearer ' + ${#strings.abbreviate(token, 28)}">Authorization: Bearer eyJhbGciOiJFUzI1NiIs…</span>
+                <button type="button" class="btn primary" data-send th:attr="data-token=${token}">Send request</button>
+            </div>
+            <pre class="res" data-response>Send the request to call /api/me with this access token.</pre>
+            <div class="status" data-status hidden></div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

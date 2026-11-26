@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Sign in')}">
+    <meta charset="UTF-8">
+    <title>Sign in | Token inspector</title>
+    <link rel="stylesheet" href="../static/css/app.css">
+</head>
+<body>
+<main class="auth">
+    <div class="auth-stack">
+        <div class="alert" th:if="${signInError != null}" role="alert">
+            <b>Sign-in failed.</b> Spring rejected what Supabase sent back:
+            <code th:text="${signInError}">[invalid_id_token] An error occurred while attempting to decode the Jwt</code>
+        </div>
+
+        <div class="card">
+            <span class="logo" aria-hidden="true">S</span>
+            <h1>Token inspector</h1>
+            <p>Sign in with your Supabase project to see the tokens it issues to this Spring app.</p>
+            <a class="btn primary lg block" href="/oauth2/authorization/supabase" th:href="@{/oauth2/authorization/supabase}">Continue with Supabase</a>
+            <p class="card-foot">Project <span class="mono" th:text="${projectRef}">nukkyudgvbbsadyyxfbu</span></p>
+        </div>
+
+        <p class="auth-links">
+            <a href="https://github.com/aziz-zina/spring-supabase-auth-demo">Source code</a>
+        </p>
+    </div>
+</main>
+</body>
+</html>

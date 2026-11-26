@@ -2,19 +2,17 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Signed out')}">
     <meta charset="UTF-8">
-    <title>Signed out</title>
+    <title>Signed out | Token inspector</title>
     <link rel="stylesheet" href="../static/css/app.css">
 </head>
 <body th:data-supabase-url="${supabase.url}" th:data-supabase-key="${supabase.publishableKey}">
-<header th:replace="~{fragments :: masthead(false)}" class="masthead">
-    <a class="wordmark" href="/">Supabase token inspector</a>
-</header>
-<main class="page">
-    <section class="intro">
-        <h1>You're signed out.</h1>
-        <p class="lede" id="status" role="status">Ending your Supabase session too…</p>
-        <a class="button" href="/" th:href="@{/}">Sign in again</a>
-    </section>
+<main class="auth">
+    <div class="card">
+        <span class="logo" aria-hidden="true">S</span>
+        <h1>Signed out</h1>
+        <p id="status" role="status">Closing your Supabase session…</p>
+        <a class="btn primary lg block" href="/" th:href="@{/}">Sign in again</a>
+    </div>
 </main>
 <script type="module">
     // Spring's session is gone; this also clears the Supabase session kept by supabase-js in this browser,
@@ -24,8 +22,8 @@
     const { supabaseUrl, supabaseKey } = document.body.dataset;
     const { error } = await createClient(supabaseUrl, supabaseKey).auth.signOut();
     document.getElementById('status').textContent = error
-        ? 'You left this app, but your Supabase session is still open: ' + error.message
-        : 'You left this app and your Supabase session is closed. The next sign-in will ask for your password.';
+        ? 'Signed out of this app. Your Supabase session is still open: ' + error.message
+        : 'Signed out of this app and of Supabase. The next sign-in will ask for your password.';
 </script>
 </body>
 </html>

@@ -69,7 +69,7 @@ public class SecurityConfig {
 
         return http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/oauth/**", "/css/**", "/favicon.ico", "/error").permitAll()
+                        .requestMatchers("/", "/oauth/**", "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(login -> login
                         .loginPage("/")

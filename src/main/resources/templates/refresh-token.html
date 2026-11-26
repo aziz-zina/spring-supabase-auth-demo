@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Refresh token')}">
+    <meta charset="UTF-8">
+    <title>Refresh token | Token inspector</title>
+    <link rel="stylesheet" href="../static/css/app.css">
+</head>
+<body>
+<header th:replace="~{fragments :: topbar}"></header>
+<div class="shell">
+    <nav th:replace="~{fragments :: sidebar(${active})}"></nav>
+
+    <main class="main">
+        <div class="head">
+            <h1>Refresh token</h1>
+            <span class="badge ok" th:if="${refreshToken != null}">Stored</span>
+            <span class="badge off" th:unless="${refreshToken != null}">None</span>
+        </div>
+        <p class="sub">
+            Spring keeps this token on the server and trades it for a new access token when the current one expires.
+            It's an opaque string, not a JWT: only Supabase can read it. Each use returns a new one and invalidates the old one.
+        </p>
+
+        <th:block th:if="${refreshToken != null}">
+            <div class="meta">
+                <div th:if="${refreshIssuedAt != null}">
+                    <span>Received</span>
+                    <b><time data-local-time th:datetime="${refreshIssuedAt}" th:text="${refreshIssuedAt}">26 Nov, 16:17</time></b>
+                </div>
+                <div th:if="${accessExpiresAt != null}">
+                    <span>Next refresh</span>
+                    <b>after <time data-local-time th:datetime="${accessExpiresAt}" th:text="${accessExpiresAt}">17:17</time></b>
+                </div>
+                <div>
+                    <span>Format</span>
+                    <b>Opaque, <th:block th:text="${#strings.length(refreshToken)}">12</th:block> characters</b>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="code-head">
+                    <span>Value</span>
+                    <span class="code-actions">
+                        <button type="button" class="btn" data-reveal="#refresh-value">Show</button>
+                        <button type="button" class="btn" data-copy="#refresh-value">Copy</button>
+                    </span>
+                </div>
+                <pre class="code is-masked" id="refresh-value" th:text="${refreshToken}">r7kqv2xh3mzw</pre>
+            </div>
+            <p class="note">Treat it like a password: anyone holding it can get fresh access tokens until the session ends.</p>
+        </th:block>
+
+        <p class="empty" th:unless="${refreshToken != null}">
+            Supabase didn't return a refresh token for this sign-in, so Spring will send you through sign-in again when the access token expires.
+        </p>
+    </main>
+</div>
+</body>
+</html>

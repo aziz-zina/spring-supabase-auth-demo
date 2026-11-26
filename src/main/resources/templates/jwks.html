@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Public keys')}">
+    <meta charset="UTF-8">
+    <title>Public keys | Token inspector</title>
+    <link rel="stylesheet" href="../static/css/app.css">
+    <script defer src="../static/js/app.js"></script>
+</head>
+<body>
+<header th:replace="~{fragments :: topbar}"></header>
+<div class="shell">
+    <nav th:replace="~{fragments :: sidebar(${active})}"></nav>
+
+    <main class="main">
+        <div class="head"><h1>Public keys (JWKS)</h1></div>
+        <p class="sub">
+            The keys Spring uses to check token signatures. Supabase signs with the private half, which never leaves your project.
+            Previously used keys stay here until the tokens they signed expire.
+        </p>
+        <p class="source"><span class="method">GET</span> <a th:href="${url}" th:text="${url}">https://nukkyudgvbbsadyyxfbu.supabase.co/auth/v1/.well-known/jwks.json</a></p>
+
+        <div class="alert" th:if="${fetchError != null}" role="alert">
+            <b>Couldn't load the keys.</b> <span th:text="${fetchError}">error</span>
+        </div>
+
+        <th:block th:if="${fetchError == null}">
+            <div class="tabs" role="tablist" aria-label="View">
+                <button type="button" role="tab" id="tab-keys" aria-controls="panel-keys" aria-selected="true">Keys</button>
+                <button type="button" role="tab" id="tab-raw" aria-controls="panel-raw" aria-selected="false" tabindex="-1">JSON</button>
+            </div>
+            <div role="tabpanel" id="panel-keys" aria-labelledby="tab-keys">
+                <table class="table">
+                    <thead>
+                    <tr><th scope="col">Key ID</th><th scope="col">Type</th><th scope="col">Algorithm</th><th scope="col">Use</th><th scope="col"></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="key : ${keys}">
+                        <td class="v" th:text="${key['kid']}">ae8e7e77-fe74-498b-a877-a4fb3b959c99</td>
+                        <td class="v" th:text="${key['kty']} + (${key['crv']} != null ? ' ' + ${key['crv']} : '')">EC P-256</td>
+                        <td class="v" th:text="${key['alg']}">ES256</td>
+                        <td class="v" th:text="${key['use']}">sig</td>
+                        <td class="tag">
+                            <span class="badge ok" th:if="${currentKid != null and currentKid == key['kid']}">Signed your token</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="note" th:if="${#lists.isEmpty(keys)}">No keys published. The project may still sign with the legacy shared secret (HS256).</p>
+            </div>
+            <div role="tabpanel" id="panel-raw" aria-labelledby="tab-raw" hidden>
+                <div class="code-block">
+                    <div class="code-head"><span>jwks.json</span><button type="button" class="btn" data-copy="#raw">Copy</button></div>
+                    <pre class="code" id="raw" th:text="${raw}">{ }</pre>
+                </div>
+            </div>
+        </th:block>
+    </main>
+</div>
+</body>
+</html>

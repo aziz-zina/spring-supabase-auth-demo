@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Discovery document')}">
+    <meta charset="UTF-8">
+    <title>Discovery document | Token inspector</title>
+    <link rel="stylesheet" href="../static/css/app.css">
+    <script defer src="../static/js/app.js"></script>
+</head>
+<body>
+<header th:replace="~{fragments :: topbar}"></header>
+<div class="shell">
+    <nav th:replace="~{fragments :: sidebar(${active})}"></nav>
+
+    <main class="main">
+        <div class="head"><h1>Discovery document</h1></div>
+        <p class="sub">
+            Everything an OAuth client needs to know about your project: endpoints, supported scopes and algorithms.
+            Spring read it at startup to configure sign-in.
+        </p>
+        <p class="source"><span class="method">GET</span> <a th:href="${url}" th:text="${url}">https://nukkyudgvbbsadyyxfbu.supabase.co/auth/v1/.well-known/openid-configuration</a></p>
+
+        <div class="alert" th:if="${fetchError != null}" role="alert">
+            <b>Couldn't load the document.</b> <span th:text="${fetchError}">error</span>
+        </div>
+
+        <th:block th:if="${fetchError == null}">
+            <div class="tabs" role="tablist" aria-label="View">
+                <button type="button" role="tab" id="tab-fields" aria-controls="panel-fields" aria-selected="true">Fields</button>
+                <button type="button" role="tab" id="tab-raw" aria-controls="panel-raw" aria-selected="false" tabindex="-1">JSON</button>
+            </div>
+            <div role="tabpanel" id="panel-fields" aria-labelledby="tab-fields">
+                <table class="table">
+                    <thead><tr><th scope="col">Field</th><th scope="col">Value</th></tr></thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td class="k" th:text="${row.name}">issuer</td>
+                        <td class="v" th:text="${row.value}">https://nukkyudgvbbsadyyxfbu.supabase.co/auth/v1</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div role="tabpanel" id="panel-raw" aria-labelledby="tab-raw" hidden>
+                <div class="code-block">
+                    <div class="code-head"><span>openid-configuration</span><button type="button" class="btn" data-copy="#raw">Copy</button></div>
+                    <pre class="code" id="raw" th:text="${raw}">{ }</pre>
+                </div>
+            </div>
+        </th:block>
+    </main>
+</div>
+</body>
+</html>

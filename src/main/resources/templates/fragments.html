@@ -3,23 +3,52 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${title}">Supabase token inspector</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;800&display=swap">
+    <meta name="color-scheme" content="dark">
+    <title th:text="${title} + ' | Token inspector'">Token inspector</title>
     <link rel="stylesheet" href="../static/css/app.css" th:href="@{/css/app.css}">
+    <script defer src="../static/js/app.js" th:src="@{/js/app.js}"></script>
 </head>
 <body>
-<header th:fragment="masthead(signedIn)" class="masthead">
-    <a class="wordmark" href="/" th:href="@{/}">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M15 5v14" stroke-dasharray="2 2"/></svg>
-        Supabase token inspector
+
+<!-- Top bar: product / project, signed-in user -->
+<header th:fragment="topbar" class="top">
+    <a class="top-brand" href="/" th:href="@{/}">
+        <span class="logo" aria-hidden="true">S</span>
+        <b>Token inspector</b>
     </a>
-    <form th:if="${signedIn}" th:action="@{/logout}" method="post">
-        <button type="submit" class="link-button">Sign out</button>
-    </form>
-    <a th:unless="${signedIn}" class="link-button" href="https://github.com/aziz-zina/spring-supabase-auth-demo">Source on GitHub</a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <span class="crumb mono-soft" th:text="${projectRef}">nukkyudgvbbsadyyxfbu</span>
+    <div class="top-right" th:if="${email != null}">
+        <span class="top-user" th:text="${email}">aziz.zina2001@gmail.com</span>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn">Sign out</button>
+        </form>
+    </div>
 </header>
+
+<!-- Sidebar -->
+<nav th:fragment="sidebar(active)" class="side" aria-label="Inspector">
+    <p class="side-label">Tokens</p>
+    <a href="/access-token" th:href="@{/access-token}" th:classappend="${active == 'access'} ? 'on'"
+       th:attr="aria-current=${active == 'access'} ? 'page'">
+        Access token <small th:text="${accessAlg}">ES256</small>
+    </a>
+    <a href="/id-token" th:href="@{/id-token}" th:classappend="${active == 'id'} ? 'on'"
+       th:attr="aria-current=${active == 'id'} ? 'page'">
+        ID token <small th:text="${idAlg}">ES256</small>
+    </a>
+    <a href="/refresh-token" th:href="@{/refresh-token}" th:classappend="${active == 'refresh'} ? 'on'"
+       th:attr="aria-current=${active == 'refresh'} ? 'page'">Refresh token</a>
+
+    <p class="side-label">API</p>
+    <a href="/access-token#console" th:href="@{/access-token#console}">GET /api/me</a>
+
+    <p class="side-label">Project</p>
+    <a href="/discovery" th:href="@{/discovery}" th:classappend="${active == 'discovery'} ? 'on'"
+       th:attr="aria-current=${active == 'discovery'} ? 'page'">Discovery document</a>
+    <a href="/jwks" th:href="@{/jwks}" th:classappend="${active == 'jwks'} ? 'on'"
+       th:attr="aria-current=${active == 'jwks'} ? 'page'">Public keys (JWKS)</a>
+</nav>
+
 </body>
 </html>
