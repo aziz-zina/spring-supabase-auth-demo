@@ -69,7 +69,7 @@
         <section class="card" th:if="${accessToken != null}">
             <h2>Call the protected API</h2>
             <p class="muted">Copy the command and run it in a terminal.</p>
-            <pre><code th:text="'curl -s http://localhost:8080/api/me -H &quot;Authorization: Bearer ' + ${accessToken} + '&quot;'">curl ...</code></pre>
+            <pre><code th:text="'curl -s ' + ${apiUrl} + ' -H &quot;Authorization: Bearer ' + ${accessToken} + '&quot;'">curl ...</code></pre>
         </section>
     </th:block>
 

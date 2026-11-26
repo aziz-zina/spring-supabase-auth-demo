@@ -1,4 +1,10 @@
 # Values come from environment variables or from a local .env file (see .env.example).
+server:
+  # Render (and most hosts) inject PORT; 8080 locally
+  port: ${PORT:8080}
+  # Behind Render's HTTPS proxy: trust X-Forwarded-* so redirect URIs are built as https://<your-app>.onrender.com
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: spring-supabase-auth-demo

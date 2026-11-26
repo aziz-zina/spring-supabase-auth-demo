@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Controller
 public class HomeController {
@@ -34,6 +35,8 @@ public class HomeController {
         }
 
         model.addAttribute("email", user.getEmail());
+        // https://<your-app>.onrender.com/api/me on Render, http://localhost:8080/api/me locally
+        model.addAttribute("apiUrl", ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/me").toUriString());
         model.addAttribute("idTokenClaims", new TreeMap<>(user.getIdToken().getClaims()));
 
         OAuth2AuthorizedClient client =

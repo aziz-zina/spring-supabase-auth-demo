@@ -54,6 +54,21 @@ The app reads `${SUPABASE_URL}/auth/v1/.well-known/openid-configuration` at star
 4. Copy the `curl` command at the bottom to call `/api/me` with the access token.
 5. **Sign out** ends both the Spring session and the Supabase browser session, so you can try another user.
 
+## 4. Deploy on Render (free)
+
+1. Render dashboard > **New > Web Service** > connect this GitHub repo.
+2. Language: **Docker** (Render builds the `Dockerfile`). Instance type: **Free**.
+3. **Environment variables**: the same 4 as `.env` (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_OAUTH_CLIENT_ID`, `SUPABASE_OAUTH_CLIENT_SECRET`). Don't set `PORT`: Render provides it.
+4. Create the service and note its URL, e.g. `https://<your-app>.onrender.com`.
+5. In Supabase, point everything at that URL:
+   - Authentication > URL Configuration > Site URL: `https://<your-app>.onrender.com`
+   - Redirect URLs: add `https://<your-app>.onrender.com/**`
+   - Authentication > OAuth Apps > your client > Redirect URIs: add `https://<your-app>.onrender.com/login/oauth2/code/supabase`
+
+Supabase has a single Site URL, so the consent page is served by whichever app it points to: set it to the Render URL in production, or back to `http://localhost:8080` for local work (or use a second Supabase project for local).
+
+Free instances sleep after 15 minutes without traffic; the first request after that takes about a minute.
+
 ## How it fits together
 
 ```text
