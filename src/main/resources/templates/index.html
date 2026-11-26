@@ -14,6 +14,11 @@
         <h1>Sign in with Supabase</h1>
     </header>
 
+    <section th:if="${signInError != null}" class="card">
+        <h2 class="error">Sign-in failed</h2>
+        <pre><code th:text="${signInError}">error</code></pre>
+    </section>
+
     <!-- Signed out -->
     <section th:if="${email == null and idTokenClaims == null}" class="card">
         <p>

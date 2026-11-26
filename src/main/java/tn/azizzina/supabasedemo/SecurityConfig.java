@@ -1,5 +1,7 @@
 package tn.azizzina.supabasedemo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -11,10 +13,13 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestCustomizers;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     /**
      * API: stateless, accepts "Authorization: Bearer <Supabase access token>".
@@ -53,6 +58,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(login -> login
                         .loginPage("/")
+                        // log the real reason (Render logs) and keep it in the session for the home page
+                        .failureHandler((request, response, exception) -> {
+                            log.warn("Sign-in with Supabase failed: {}", exception.getMessage(), exception);
+                            new SimpleUrlAuthenticationFailureHandler("/?error")
+                                    .onAuthenticationFailure(request, response, exception);
+                        })
                         .authorizationEndpoint(endpoint ->
                                 endpoint.authorizationRequestResolver(authorizationRequestResolver)))
                 // after the Spring session ends, also end the Supabase browser session (see signed-out.html)

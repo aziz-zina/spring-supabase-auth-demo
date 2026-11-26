@@ -3,7 +3,11 @@ package tn.azizzina.supabasedemo;
 import java.util.Map;
 import java.util.TreeMap;
 
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -28,7 +32,12 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String home(Authentication authentication, Model model) {
+    public String home(Authentication authentication, HttpSession session, Model model) {
+        // set by the failure handler after a failed sign-in (/?error)
+        if (session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION) instanceof AuthenticationException failure) {
+            model.addAttribute("signInError", failure.getMessage());
+            session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+        }
         if (!(authentication instanceof OAuth2AuthenticationToken oauth)
                 || !(oauth.getPrincipal() instanceof OidcUser user)) {
             return "index";
